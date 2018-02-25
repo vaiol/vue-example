@@ -40,7 +40,8 @@ export default {
     year: 2018,
     items: [
       { title: 'Dashboard', icon: 'dashboard', link: '/' },
-      { title: 'Register', icon: 'account_box', link: 'register' }
+      { title: 'Sign Up', icon: 'account_box', link: 'register' },
+      { title: 'Sign In', icon: 'account_box', link: 'login' }
     ]
   }),
   props: {
