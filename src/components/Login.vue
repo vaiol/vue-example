@@ -8,21 +8,19 @@
         <v-card-text>
           <form>
             <v-text-field
-              v-model="email"
               label="E-mail"
-              :error-messages="errors.collect('email')"
-              v-validate="'required|email'"
-              data-vv-name="email"
+              v-model="email"
+              :error-messages="emailErrors"
+              @input="$v.email.$touch()"
+              @blur="$v.email.$touch()"
               required
             ></v-text-field>
             <v-text-field
               label="Enter your password"
-              name="password"
               v-model="password"
-              data-vv-name="password"
-              data-vv-delay="100"
-              :error-messages="errors.collect('password')"
-              v-validate="'required'"
+              :error-messages="passwordErrors"
+              @input="$v.password.$touch()"
+              @blur="$v.password.$touch()"
               :append-icon="e1 ? 'visibility' : 'visibility_off'"
               :append-icon-cb="() => (e1 = !e1)"
               :type="e1 ? 'password' : 'text'"
@@ -50,44 +48,58 @@
 </template>
 
 <script>
+import { validationMixin } from 'vuelidate'
+import { required, maxLength, email } from 'vuelidate/lib/validators'
+
 export default {
-  $_veeValidate: {
-    validator: 'new'
+  mixins: [validationMixin],
+
+  validations: {
+    email: { required, email, maxLength: maxLength(255) },
+    password: { required, maxLength: maxLength(255) }
   },
+
   data: () => ({
-    e1: true,
-    password: '',
     email: '',
+    password: '',
+    e1: true,
     snackbarText: 'Input is not valid!',
-    snackbar: false,
-    dictionary: {
-      attributes: {
-        email: 'E-mail Address',
-        password: 'Password'
-      }
-    }
+    snackbar: false
   }),
 
-  mounted () {
-    this.$validator.localize('en', this.dictionary)
+  computed: {
+    emailErrors () {
+      const errors = []
+      if (!this.$v.email.$dirty) return errors
+      !this.$v.email.email && errors.push('Must be valid e-mail')
+      !this.$v.email.maxLength && errors.push('E-mail must be at most 255 characters long')
+      !this.$v.email.required && errors.push('E-mail is required')
+      return errors
+    },
+    passwordErrors () {
+      const errors = []
+      if (!this.$v.password.$dirty) return errors
+      !this.$v.password.maxLength && errors.push('Password must be at most 255 characters long')
+      !this.$v.password.required && errors.push('Password is required')
+      return errors
+    }
   },
 
   methods: {
     submit () {
-      this.$validator.validateAll().then(result => {
-        if (!result) {
-          this.snackbar = true
-        } else {
-          this.clear()
-        }
-      }).catch(() => {
+      this.$v.$touch()
+      if (this.$v.$error) {
         this.snackbar = true
-      })
+      } else {
+        console.log('email: ' + this.email)
+        console.log('passw: ' + this.password)
+        this.clear()
+      }
     },
     clear () {
-      this.password = ''
+      this.$v.$reset()
       this.email = ''
-      this.$validator.reset()
+      this.password = ''
     }
   }
 }
